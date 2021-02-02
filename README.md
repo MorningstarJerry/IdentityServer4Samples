@@ -1,8 +1,199 @@
 # IdentityServer4Samples
 A demo to help you understand ids4
 
-# IdentityServer4 和 ASP.NET Core 简介 Identity
+# Project Structure
+![i1](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i1.png)
 
+# Run Ids4
+![i2](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i2.png)
+
+## Test user
+```
+using IdentityModel;
+using IdentityServer4.Test;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+namespace IdentityServer4Samples
+{
+    internal class Users
+    {
+        public static List<TestUser> Get()
+        {
+            return new List<TestUser> {
+            new TestUser {
+                SubjectId = "5BE86359-073C-434B-AD2D-A3932222DABE",
+                Username = "jerry",
+                Password = "JerryX123.",
+                Claims = new List<Claim> {
+                    new Claim(JwtClaimTypes.Email, "jerryDanks@Outlook.com"),
+                    new Claim(JwtClaimTypes.Role, "admin"),
+                }
+            }
+        };
+        }
+    }
+}
+```
+## Resource
+```using IdentityServer4.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace IdentityServer4Samples
+{
+    internal class Resources
+    {
+        public static IEnumerable<IdentityResource> GetIdentityResources()
+        {
+            return new[]
+            {
+            new IdentityResources.OpenId(),
+            new IdentityResources.Profile(),
+            new IdentityResources.Email(),
+            new IdentityResource
+            {
+                Name = "role",
+                UserClaims = new List<string> {"role"}
+            }
+        };
+        }
+
+        public static IEnumerable<ApiResource> GetApiResources()
+        {
+            return new[]
+            {
+            new ApiResource
+            {
+                Name = "api1",
+                DisplayName = "API #1",
+                Description = "Allow the application to access API #1 on your behalf",
+                Scopes = new List<string> {"api1.read", "api1.write"},
+                ApiSecrets = new List<Secret> {new Secret("ScopeSecret".Sha256())},
+                UserClaims = new List<string> {"role"}
+            }
+        };
+        }
+
+        public static IEnumerable<ApiScope> GetApiScopes()
+        {
+            return new[]
+            {
+            new ApiScope("api1.read", "Read Access to API #1"),
+            new ApiScope("api1.write", "Write Access to API #1")
+        };
+        }
+    }
+}
+```
+## Client
+```
+using IdentityServer4;
+using IdentityServer4.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace IdentityServer4Samples
+{
+    internal class Clients
+    {
+        public static IEnumerable<Client> Get()
+        {
+            return new List<Client>
+        {
+            new Client
+            {
+                ClientId = "oauthClient",
+                ClientName = "Example client application using client credentials",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = new List<Secret> {new Secret("SuperSecretPassword".Sha256())}, // change me!
+                AllowedScopes = new List<string> {"api1.read", "api1.write" }
+            },
+            new Client
+            {
+                ClientId = "oidcClient",
+                ClientName = "Example Client Application",
+                ClientSecrets = new List<Secret> {new Secret("SuperSecretPassword".Sha256())}, // change me!
+
+                AllowedGrantTypes = GrantTypes.Code,
+                RedirectUris = new List<string> {"https://localhost:5001/signin-oidc"},
+                AllowedScopes = new List<string>
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                    "role",
+                    "api1.read",
+                    "api1.write"
+                },
+                AllowAccessTokensViaBrowser=true,
+            // 是否需要同意授权 （默认是false）
+                RequireConsent=true,
+                RequirePkce = true,
+                AllowPlainTextPkce = false
+            }
+        };
+        }
+    }
+}
+```
+
+# Run MVC Client
+```
+Install-Package Microsoft.AspNetCore.Authentication.OpenIdConnect -Version 5.0.2
+Install-Package IdentityServer4.AccessTokenValidation -Version 3.0.1
+```
+
+```
+  public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllersWithViews();
+            services.AddAuthorization();
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+                options.DefaultChallengeScheme = "oidc";
+            })
+            .AddCookie("Cookies")  //使用Cookie作为验证用户的首选方式
+            .AddOpenIdConnect("oidc", options =>
+            {
+                options.Authority = "https://localhost:5000";  //授权服务器地址
+                options.RequireHttpsMetadata = false;  //暂时不用https
+                options.ClientId = "oidcClient";
+                options.ClientSecret = "SuperSecretPassword";
+                options.ResponseType = "code"; //代表Authorization Code
+                options.Scope.Add("api1.read"); //添加授权资源
+                options.SaveTokens = true; //表示把获取的Token存到Cookie中
+                options.GetClaimsFromUserInfoEndpoint = true;
+            });
+        }
+```
+![i3](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i3.png)
+
+
+# Call WebAPI
+![i4](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i4.png)
+
+Login and Copy Token to the API Request Header
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjQyN0RBRURFQjZGMzlCOTY2NDE1QzgyNEFDNjNCMEFBIiwidHlwIjoiYXQrand0In0.eyJuYmYiOjE2MTIyNDg0MTAsImV4cCI6MTYxMjI1MjAxMCwiaXNzIjoiaHR0cHM6Ly9sb2NhbGhvc3Q6NTAwMCIsImF1ZCI6ImFwaTEiLCJjbGllbnRfaWQiOiJvaWRjQ2xpZW50Iiwic3ViIjoiNUJFODYzNTktMDczQy00MzRCLUFEMkQtQTM5MzIyMjJEQUJFIiwiYXV0aF90aW1lIjoxNjEyMjQ4MzY2LCJpZHAiOiJsb2NhbCIsInJvbGUiOiJhZG1pbiIsImp0aSI6IkYzRjk4M0YzNEZBMkU3RDAyNTU3Mzg1Q0UzMjIyMjc0Iiwic2lkIjoiODEwRUUxOUFGNkFGRTRBMDkwNEUwNzdBQUFCNUVENjAiLCJpYXQiOjE2MTIyNDg0MTAsInNjb3BlIjpbIm9wZW5pZCIsInByb2ZpbGUiLCJhcGkxLnJlYWQiXSwiYW1yIjpbInB3ZCJdfQ.Rd38bMdp21TBJZX5FLHVr6JMds9_n_uhxXQ9fnhnHhPDDXeVt4TUKx9JlAwdrN1oYKHHXSeurzgFHR17csnaIw2KxTsf0rADGENvWNgfejPvupuolBJ6Z99E3pNb7ygDVCfpw6S3b4CtenJMnr_DY2_PvzafGPJUUM0nNSbxXbjSSDve_a1ugCdr0ah1_ulnNJ2jZrQukT8FkcMGrMs0DRIo3NyYLi1bBYZ0ojzD77zfrriHnqhiJnMH2tE9AM0YCybUvPM8STc9eZSfbbxasNsWbXZMb4FXjuttejxLZHACwa4AVLss7i4VTzF8nSU61IbFMAWrbbIuOnv4Ygy71w
+
+```
+
+![i5](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i5.png)
+
+
+
+# IdentityServer4 和 ASP.NET Core 简介 Identity
+https://identityserver4.readthedocs.io/en/latest/quickstarts/6_aspnet_identity.html#new-project-for-asp-net-core-identity
 ## ASP.NET Core 简介 Identity (针对 MVC Razor Pages 进行单体认证)
 
 ```
@@ -132,6 +323,7 @@ export default {
 
 # aspnet core identity 集成 ids4
 
-
-
 https://identityserver4.readthedocs.io/en/latest/quickstarts/6_aspnet_identity.html
+
+
+
