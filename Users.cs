@@ -18,7 +18,7 @@ namespace IdentityServer4Samples
                 Username = "jerry",
                 Password = "JerryX123.",
                 Claims = new List<Claim> {
-                    new Claim(JwtClaimTypes.Email, "scott@scottbrady91.com"),
+                    new Claim(JwtClaimTypes.Email, "jerryDanks@Outlook.com"),
                     new Claim(JwtClaimTypes.Role, "admin"),
                 }
             }
