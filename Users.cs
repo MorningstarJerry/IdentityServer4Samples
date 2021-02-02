@@ -15,8 +15,8 @@ namespace IdentityServer4Samples
             return new List<TestUser> {
             new TestUser {
                 SubjectId = "5BE86359-073C-434B-AD2D-A3932222DABE",
-                Username = "scott",
-                Password = "password",
+                Username = "jerry",
+                Password = "JerryX123.",
                 Claims = new List<Claim> {
                     new Claim(JwtClaimTypes.Email, "scott@scottbrady91.com"),
                     new Claim(JwtClaimTypes.Role, "admin"),
