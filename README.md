@@ -322,8 +322,5 @@ export default {
 
 
 # aspnet core identity 集成 ids4
-
+https://identityserver4.readthedocs.io/en/latest/quickstarts/0_overview.html#refquickstartoverview
 https://identityserver4.readthedocs.io/en/latest/quickstarts/6_aspnet_identity.html
-
-
-
