@@ -276,7 +276,7 @@ https://www.cnblogs.com/stulzq/p/8119928.html
 
 ## IdentityServer4是为ASP.NET CORE量身定制的实现了OpenId Connect和OAuth2.0协议的认证授权中间件。
 
-<img src="C:\Users\2294765\AppData\Roaming\Typora\typora-user-images\image-20201216110304560.png" alt="image-20201216110304560" style="zoom:50%;" />
+![i6](https://github.com/MorningstarJerry/IdentityServer4Samples/blob/master/Screens/i6.png)
 
 # Get Start With IndentityServer 4
 
